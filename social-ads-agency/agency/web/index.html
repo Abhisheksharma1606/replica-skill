@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grow With Ads</title>
+<link rel="stylesheet" href="/static/styles.css">
+<style>
+  body { min-height: 100dvh; display: flex; flex-direction: column; }
+  header {
+    display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface);
+    border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 2;
+  }
+  .logo {
+    width: 38px; height: 38px; border-radius: 10px; background: var(--accent); color: var(--accent-ink);
+    display: grid; place-items: center; font-weight: 800; flex: none;
+  }
+  .who { flex: 1; min-width: 0; }
+  .who b { display: block; }
+  .who span { font-size: 13px; color: var(--ok); }
+  main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 20px 16px 8px; }
+  .hero { text-align: center; padding: 28px 8px 8px; }
+  .hero h1 { font-size: clamp(24px, 4vw, 32px); line-height: 1.2; margin: 0 0 8px; letter-spacing: -.01em; }
+  .hero p { margin: 0 auto; max-width: 520px; color: var(--muted); }
+  .steps { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 18px 0 6px; }
+  .steps span { font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--surface);
+    border: 1px solid var(--border); color: var(--muted); }
+  .thread { display: flex; flex-direction: column; gap: 10px; padding: 12px 0; }
+  .msg { max-width: 82%; padding: 10px 14px; border-radius: 16px; white-space: pre-wrap; overflow-wrap: anywhere;
+    box-shadow: var(--shadow); }
+  .msg.me { align-self: flex-end; background: var(--bubble-me); color: var(--bubble-me-ink); border-bottom-right-radius: 4px; }
+  .msg.me a { color: inherit; }
+  .msg.them { align-self: flex-start; background: var(--bubble-them); border: 1px solid var(--border);
+    border-bottom-left-radius: 4px; }
+  .msg.system { align-self: center; background: var(--accent-soft); color: var(--text); font-size: 14px;
+    box-shadow: none; max-width: 92%; }
+  .typing { align-self: flex-start; display: flex; gap: 4px; padding: 14px; }
+  .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); animation: b 1.2s infinite; }
+  .typing i:nth-child(2) { animation-delay: .15s } .typing i:nth-child(3) { animation-delay: .3s }
+  @keyframes b { 0%, 60%, 100% { opacity: .3; transform: none } 30% { opacity: 1; transform: translateY(-3px) } }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; padding: 4px 0 12px; }
+  .chips button { border: 1px solid var(--border); background: var(--surface); border-radius: 999px;
+    padding: 6px 12px; cursor: pointer; font-size: 14px; text-align: left; }
+  .chips button:hover { border-color: var(--accent); color: var(--accent); }
+  footer { position: sticky; bottom: 0; background: linear-gradient(transparent, var(--bg) 30%); padding: 10px 16px 16px; }
+  form { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; }
+  textarea { flex: 1; resize: none; max-height: 140px; border-radius: 22px; padding: 11px 16px;
+    border: 1px solid var(--border); background: var(--surface); box-shadow: var(--shadow); }
+  textarea:focus { outline: 2px solid var(--accent); }
+  .send { height: 44px; width: 44px; border-radius: 50%; border: 0; background: var(--accent);
+    color: var(--accent-ink); cursor: pointer; display: grid; place-items: center; flex: none; }
+  .send:disabled { opacity: .5; }
+  .note { text-align: center; font-size: 12px; color: var(--faint); margin-top: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" id="logo">A</div>
+  <div class="who"><b id="agency">Your ads team</b><span>Online, replies in seconds</span></div>
+  <button class="btn sm" id="reset" title="Start a new conversation">New chat</button>
+</header>
+
+<main>
+  <section class="hero" id="hero">
+    <h1>Turn Instagram, Facebook and TikTok into a steady stream of customers</h1>
+    <p>Tell us about your business. We'll audit your website and competitors, send a clear plan and price,
+      and have your first ads ready for review within days.</p>
+    <div class="steps"><span>1. Chat</span><span>2. Free audit</span><span>3. Proposal</span>
+      <span>4. Ads built</span><span>5. Live, with a human check</span></div>
+  </section>
+  <div class="thread" id="thread" aria-live="polite"></div>
+  <div class="chips" id="chips">
+    <button>I run a salon and want more bookings</button>
+    <button>We sell skincare online, need more sales</button>
+    <button>How much does it cost?</button>
+  </div>
+</main>
+
+<footer>
+  <form id="form">
+    <textarea id="input" rows="1" placeholder="Type your message" aria-label="Message" maxlength="4000"></textarea>
+    <button class="send" id="send" aria-label="Send">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+           stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </form>
+  <div class="note" id="note">Our AI account manager replies instantly. A human strategist approves every campaign before it goes live.</div>
+</footer>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const thread = $("thread"), input = $("input"), form = $("form"), send = $("send");
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+  };
+
+  function newSession() {
+    const id = "s" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    store.set("chat.session", id); store.set("chat.log", "[]");
+    return id;
+  }
+  let session = store.get("chat.session") || newSession();
+  let log = [];
+  try { log = JSON.parse(store.get("chat.log") || "[]"); } catch (e) { log = []; }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+  function linkify(text) {
+    return esc(text)
+      .replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]])/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
+      .replace(/\*([^*\n]+)\*/g, "<b>$1</b>");
+  }
+  function add(role, text, save = true) {
+    const el = document.createElement("div");
+    el.className = "msg " + role;
+    el.innerHTML = linkify(text);
+    thread.appendChild(el);
+    if (save) { log.push({ role, text }); store.set("chat.log", JSON.stringify(log.slice(-200))); }
+    $("hero").style.display = "none";
+    $("chips").style.display = "none";
+    el.scrollIntoView({ behavior: "smooth", block: "end" });
+  }
+  function typing(on) {
+    let t = $("typing");
+    if (on && !t) { t = document.createElement("div"); t.id = "typing"; t.className = "typing msg them";
+      t.innerHTML = "<i></i><i></i><i></i>"; thread.appendChild(t); t.scrollIntoView({ block: "end" }); }
+    if (!on && t) t.remove();
+  }
+
+  async function sendText(text) {
+    text = text.trim();
+    if (!text) return;
+    add("me", text);
+    input.value = ""; autosize();
+    send.disabled = true; typing(true);
+    try {
+      const r = await fetch("/webhooks/webchat", { method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ session_id: session, text }) });
+      const data = await r.json();
+      typing(false);
+      if (!r.ok) throw new Error(data.detail ? JSON.stringify(data.detail) : r.status);
+      add("them", data.reply);
+      (data.pushed || []).forEach((m) => add("system", m));
+    } catch (e) {
+      typing(false);
+      add("system", "Message not delivered. Check your connection and try again.", false);
+    } finally { send.disabled = false; input.focus(); }
+  }
+
+  async function poll() {
+    try {
+      const r = await fetch("/webchat/" + encodeURIComponent(session) + "/outbox");
+      if (r.ok) ((await r.json()).messages || []).forEach((m) => add("system", m));
+    } catch (e) {}
+  }
+
+  function autosize() { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 140) + "px"; }
+  input.addEventListener("input", autosize);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendText(input.value); } });
+  form.addEventListener("submit", (e) => { e.preventDefault(); sendText(input.value); });
+  $("chips").addEventListener("click", (e) => { if (e.target.tagName === "BUTTON") sendText(e.target.textContent); });
+  $("reset").addEventListener("click", () => { session = newSession(); log = []; thread.innerHTML = "";
+    $("hero").style.display = ""; $("chips").style.display = ""; });
+
+  fetch("/api/public/config").then((r) => r.json()).then((c) => {
+    $("agency").textContent = c.agency; $("logo").textContent = (c.agency || "A").trim()[0];
+    document.title = c.agency;
+    if (c.dry_run) $("note").textContent += " Demo mode: payments and ad accounts are simulated.";
+  }).catch(() => {});
+
+  log.forEach((m) => add(m.role, m.text, false));
+  setInterval(poll, 5000);
+})();
+</script>
+</body>
+</html>

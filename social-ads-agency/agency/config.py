@@ -76,6 +76,9 @@ class Settings:
         x.strip() for x in os.environ.get("SLACK_APPROVER_IDS", "").split(",") if x.strip()))
     approval_ttl_hours: float = field(default_factory=lambda: _float("APPROVAL_TTL_HOURS", 48.0))
 
+    # Web control room (/admin). Required unless DRY_RUN is on.
+    admin_token: str = field(default_factory=lambda: os.environ.get("ADMIN_TOKEN", ""))
+
     # Background jobs (n8n / Temporal / cron call these endpoints)
     jobs_token: str = field(default_factory=lambda: os.environ.get("JOBS_TOKEN", ""))
 

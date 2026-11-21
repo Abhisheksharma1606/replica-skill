@@ -43,6 +43,23 @@ to one voice; the orchestrator calls the specialists and the deterministic worke
 +-------------------------------------------------------------------------+
 ```
 
+## The web app
+
+The same server hosts two web apps, so every agent can be used and watched from a browser.
+
+| URL | Who | What |
+| --- | --- | --- |
+| `/` | Clients | Chat with the account manager agent. Same brain as WhatsApp and voice; payment and launch updates arrive in the thread. |
+| `/admin` | Your team | The control room. **Pipeline** shows every client as a card in their stage. Open a client to see what each agent produced: the profile (Discovery), site scan and competitor audit, quote and proposal, ads, campaigns, Brand Brain and the event log. **Approvals** lets you approve or reject launches in the browser (same checks as Slack, first decision wins). **Agents** shows every agent and worker, which tools work in which stage, and which integrations are connected, plus a button to run the kill-switch. **Activity** is the live audit trail. |
+
+From the control room a strategist can also take over a conversation after a handoff, write to the
+client directly, and hand the client back to the agent. In DRY_RUN, "Simulate payment" and
+"Simulate Meta access" buttons stand in for the webhooks.
+
+The control room's API lives under `/api/admin` and needs `ADMIN_TOKEN` as a bearer token
+(it stays open only in DRY_RUN with no token set). The pages are plain HTML, CSS and JS in
+`agency/web/`, with no build step, light and dark themes, and phone layouts.
+
 ## How "all agents in one agent" works
 
 | Agent | What it does | When it runs | Output |
@@ -86,13 +103,14 @@ passed to the model as a mid-conversation system message from the agency's own s
 ```bash
 cd social-ads-agency
 pip install -r requirements.txt
-python -m pytest -q tests          # 17 offline tests, full journey with a fake Claude
+python -m pytest -q tests          # 23 offline tests, full journey with a fake Claude
 
 export ANTHROPIC_API_KEY=...       # or: ant auth login
 DRY_RUN=true uvicorn agency.gateway:create_app --factory --port 8000
 ```
 
-Talk to it:
+Open http://localhost:8000 to chat as a client and http://localhost:8000/admin for the
+control room. Or from the command line:
 
 ```bash
 curl -s localhost:8000/webhooks/webchat -H 'content-type: application/json' \
@@ -134,7 +152,8 @@ docker compose up --build
    signing secret, approval channel and `SLACK_APPROVER_IDS`.
 9. **Kill-switch**: the compose file runs it every 15 minutes; or call `POST /jobs/killswitch`
    with `X-Job-Token` from an n8n Cron node or a Temporal schedule.
-10. Flip `DRY_RUN=false`.
+10. Set a long random `ADMIN_TOKEN` for the control room, and serve it over HTTPS.
+11. Flip `DRY_RUN=false`.
 
 ## Change the business
 

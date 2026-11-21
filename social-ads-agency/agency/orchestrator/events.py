@@ -84,6 +84,16 @@ def on_slack_decision(sv, approval_id: str, decision: str, slack_user: str) -> s
     s = sv.settings
     if s.slack_approver_ids and slack_user not in s.slack_approver_ids:
         return f"<@{slack_user}> is not on the approver list; nothing changed."
+    return decide(sv, approval_id, decision, slack_user, actor_label=f"<@{slack_user}>")
+
+
+def decide(sv, approval_id: str, decision: str, actor: str, actor_label: Optional[str] = None) -> str:
+    """The single approval path, shared by Slack and the web control room.
+    The caller has already authenticated the actor."""
+    if decision not in ("approve", "reject"):
+        return "Unknown decision."
+    slack_user = actor
+    label = actor_label or actor
     approval = sv.repo.get_approval(approval_id)
     if approval is None:
         return "Unknown approval."
@@ -126,7 +136,7 @@ def on_slack_decision(sv, approval_id: str, decision: str, slack_user: str) -> s
                           {"approval_id": approval.id, "campaign_id": campaign.id, "by": slack_user})
         _refresh(sv, state)
     sv.messenger.send(approval.client_key, client_text)
-    return f"{'Launched' if decision == 'approve' else 'Rejected'} by <@{slack_user}>."
+    return f"{'Launched' if decision == 'approve' else 'Rejected'} by {label}."
 
 
 def resolve_dry_run_payment(sv, client_key: str) -> Optional[PaymentEvent]:

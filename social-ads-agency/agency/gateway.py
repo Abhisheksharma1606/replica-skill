@@ -3,6 +3,8 @@
 Run:  uvicorn agency.gateway:create_app --factory --host 0.0.0.0 --port 8000
 
 Routes
+  GET  /                             client chat web app
+  GET  /admin                        agency control room (API under /api/admin, ADMIN_TOKEN)
   GET  /health
   GET  /webhooks/whatsapp            Meta webhook verification
   POST /webhooks/whatsapp            inbound WhatsApp (acked fast, processed in background)
@@ -29,7 +31,10 @@ from urllib.parse import parse_qs
 
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Query, Request
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
+
+from agency.admin import build_admin_router
 
 from agency.app import Services, build_services
 from agency.ingestion import normalize
@@ -41,6 +46,7 @@ from agency.workers import killswitch
 
 log = logging.getLogger(__name__)
 
+WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
 FILE_ID = re.compile(r"^[A-Za-z0-9_-]{16,64}$")
 
 
@@ -81,6 +87,23 @@ def create_app(services: Optional[Services] = None) -> FastAPI:
             log.exception("failed to handle message from %s", msg.client_key)
             reply = "Sorry, something went wrong on our side. A teammate will follow up shortly."
         sv.messenger.send(msg.client_key, reply)
+
+    # ------------------------------------------------------------- web app
+
+    app.include_router(build_admin_router(sv))
+    app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
+
+    @app.get("/", include_in_schema=False)
+    def chat_page():
+        return FileResponse(os.path.join(WEB_DIR, "index.html"), media_type="text/html")
+
+    @app.get("/admin", include_in_schema=False)
+    def admin_page():
+        return FileResponse(os.path.join(WEB_DIR, "admin.html"), media_type="text/html")
+
+    @app.get("/api/public/config")
+    def public_config() -> dict:
+        return {"agency": s.agency_name, "dry_run": s.dry_run}
 
     # ------------------------------------------------------------- health
 

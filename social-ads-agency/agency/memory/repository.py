@@ -18,6 +18,8 @@ class Repository(Protocol):
     def save_approval(self, approval: Approval) -> None: ...
     def get_approval(self, approval_id: str) -> Optional[Approval]: ...
     def log_event(self, client_key: str, kind: str, data: dict[str, Any]) -> None: ...
+    def list_approvals(self, status: Optional[str] = None) -> list[Approval]: ...
+    def recent_events(self, client_key: Optional[str] = None, limit: int = 50) -> list[dict[str, Any]]: ...
 
 
 class InMemoryRepository:
@@ -58,6 +60,14 @@ class InMemoryRepository:
     def log_event(self, client_key: str, kind: str, data: dict[str, Any]) -> None:
         with self._lock:
             self.events.append({"client_key": client_key, "kind": kind, "data": data, "at": now_utc()})
+
+    def list_approvals(self, status: Optional[str] = None) -> list[Approval]:
+        return sorted((a.model_copy(deep=True) for a in self.approvals.values()
+                       if status is None or a.status == status), key=lambda a: a.requested_at, reverse=True)
+
+    def recent_events(self, client_key: Optional[str] = None, limit: int = 50) -> list[dict[str, Any]]:
+        rows = [e for e in self.events if client_key is None or e["client_key"] == client_key]
+        return list(reversed(rows[-limit:]))
 
 
 class PostgresRepository:
@@ -119,6 +129,16 @@ class PostgresRepository:
     def log_event(self, client_key: str, kind: str, data: dict[str, Any]) -> None:
         self._exec("INSERT INTO events (client_key, kind, data) VALUES (%s,%s,%s)",
                    (client_key, kind, json.dumps(data, default=str)))
+
+    def list_approvals(self, status: Optional[str] = None) -> list[Approval]:
+        rows = self._exec("SELECT data FROM approvals WHERE (%s::text IS NULL OR status=%s) "
+                          "ORDER BY updated_at DESC LIMIT 200", (status, status))
+        return [Approval.model_validate(r[0]) for r in rows]
+
+    def recent_events(self, client_key: Optional[str] = None, limit: int = 50) -> list[dict[str, Any]]:
+        rows = self._exec("SELECT client_key, kind, data, at FROM events WHERE (%s::text IS NULL OR client_key=%s) "
+                          "ORDER BY at DESC LIMIT %s", (client_key, client_key, limit))
+        return [{"client_key": r[0], "kind": r[1], "data": r[2], "at": r[3]} for r in rows]
 
 
 def build_repository(database_url: str) -> Repository:

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agency Control Room</title>
+<link rel="stylesheet" href="/static/styles.css">
+<link rel="stylesheet" href="/static/admin.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="logo" id="logo">A</div><div><b id="agency">Agency</b>
+    <div class="faint small">Control room</div></div></div>
+  <nav id="tabs" role="tablist">
+    <button data-tab="pipeline" class="active">Pipeline</button>
+    <button data-tab="approvals">Approvals <span class="count" id="approvalCount" hidden></span></button>
+    <button data-tab="agents">Agents</button>
+    <button data-tab="activity">Activity</button>
+  </nav>
+  <div class="top-right">
+    <span class="pill warn" id="dryBadge" hidden>DRY RUN</span>
+    <a class="btn sm" href="/" target="_blank" rel="noopener">Open client chat</a>
+    <button class="btn sm" id="themeBtn" title="Toggle theme">Theme</button>
+  </div>
+</header>
+
+<div id="login" class="login" hidden>
+  <div class="card login-card">
+    <h2>Sign in to the control room</h2>
+    <p class="muted">Paste the ADMIN_TOKEN from the server's environment.</p>
+    <input class="input" id="tokenInput" type="password" placeholder="Admin token" autocomplete="current-password">
+    <button class="btn primary" id="tokenBtn">Sign in</button>
+    <p class="bad-text" id="loginErr" hidden>That token was not accepted.</p>
+  </div>
+</div>
+
+<main id="app">
+  <section class="stats" id="stats"></section>
+
+  <section data-panel="pipeline">
+    <div class="board" id="board"></div>
+  </section>
+
+  <section data-panel="approvals" hidden>
+    <div class="row-head"><h2>Launch approvals</h2>
+      <label class="muted small">Reviewer <input class="input inline" id="reviewer" value="admin" maxlength="60"></label></div>
+    <p class="muted">Campaigns are already built on the platform, paused. Approving turns them on and starts spend.
+      The same requests are also posted to Slack; whichever is used first wins.</p>
+    <div id="approvals"></div>
+  </section>
+
+  <section data-panel="agents" hidden>
+    <div class="row-head"><h2>Agents and workers</h2><span class="muted small" id="modelName"></span></div>
+    <div class="flow" aria-label="How a message flows">
+      <span>Client message</span><i>&rarr;</i><span>Discovery Agent</span><i>&rarr;</i><span>Account Manager</span>
+      <i>&rarr;</i><span>Specialists and workers</span><i>&rarr;</i><span>Human gate</span><i>&rarr;</i><span>Live</span>
+    </div>
+    <div class="agents" id="agents"></div>
+    <div class="two">
+      <div class="card pad"><h3>Which tools work in which stage</h3><div class="scroll-x" id="matrix"></div></div>
+      <div class="card pad"><h3>Integrations</h3><div id="integrations"></div>
+        <button class="btn" id="killBtn" style="margin-top:12px">Run kill-switch sweep now</button>
+        <pre class="report" id="killReport" hidden></pre></div>
+    </div>
+  </section>
+
+  <section data-panel="activity" hidden>
+    <h2>Activity</h2>
+    <div class="card" id="activity"></div>
+  </section>
+</main>
+
+<aside class="drawer" id="drawer" hidden aria-label="Client details">
+  <div class="drawer-inner">
+    <div class="drawer-head">
+      <div><h2 id="dName"></h2><div class="muted small" id="dMeta"></div></div>
+      <button class="btn sm" id="dClose" aria-label="Close">Close</button>
+    </div>
+    <div class="drawer-actions" id="dActions"></div>
+    <nav class="subtabs" id="dTabs">
+      <button data-d="overview" class="active">Overview</button>
+      <button data-d="conversation">Conversation</button>
+      <button data-d="audit">Audit</button>
+      <button data-d="proposal">Quote and proposal</button>
+      <button data-d="creatives">Creatives</button>
+      <button data-d="campaigns">Campaigns</button>
+      <button data-d="brain">Brand Brain</button>
+      <button data-d="log">Log</button>
+    </nav>
+    <div id="dBody"></div>
+  </div>
+</aside>
+<div class="toast" id="toast" hidden></div>
+
+<script src="/static/admin.js"></script>
+</body>
+</html>

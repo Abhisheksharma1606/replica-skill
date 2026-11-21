@@ -1,0 +1,98 @@
+/* Shared design tokens for the chat app and the control room. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f0f2f5;
+  --border: #e2e5ea;
+  --text: #15181d;
+  --muted: #5d6673;
+  --faint: #8a93a0;
+  --accent: #4f46e5;
+  --accent-ink: #ffffff;
+  --accent-soft: #eceafd;
+  --ok: #15803d;
+  --ok-soft: #e3f4e8;
+  --warn: #b45309;
+  --warn-soft: #fdf1e1;
+  --bad: #b91c1c;
+  --bad-soft: #fde8e8;
+  --bubble-me: #4f46e5;
+  --bubble-me-ink: #ffffff;
+  --bubble-them: #ffffff;
+  --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 4px 16px rgba(16, 24, 40, .06);
+  --radius: 12px;
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1115;
+    --surface: #171a20;
+    --surface-2: #1e222a;
+    --border: #2a2f39;
+    --text: #e8eaee;
+    --muted: #a0a8b5;
+    --faint: #707988;
+    --accent: #8b85ff;
+    --accent-ink: #0f1115;
+    --accent-soft: #24223f;
+    --ok: #4ade80;
+    --ok-soft: #14301f;
+    --warn: #fbbf24;
+    --warn-soft: #3a2c10;
+    --bad: #f87171;
+    --bad-soft: #3b1717;
+    --bubble-me: #6d66f5;
+    --bubble-me-ink: #ffffff;
+    --bubble-them: #1e222a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 16px rgba(0, 0, 0, .25);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f1115; --surface: #171a20; --surface-2: #1e222a; --border: #2a2f39; --text: #e8eaee;
+  --muted: #a0a8b5; --faint: #707988; --accent: #8b85ff; --accent-ink: #0f1115; --accent-soft: #24223f;
+  --ok: #4ade80; --ok-soft: #14301f; --warn: #fbbf24; --warn-soft: #3a2c10; --bad: #f87171;
+  --bad-soft: #3b1717; --bubble-me: #6d66f5; --bubble-me-ink: #fff; --bubble-them: #1e222a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 16px rgba(0, 0, 0, .25); color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 15px/1.5 var(--font); -webkit-font-smoothing: antialiased; }
+a { color: var(--accent); }
+button, input, textarea, select { font: inherit; color: inherit; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border);
+  background: var(--surface); padding: 7px 12px; border-radius: 8px; cursor: pointer; font-weight: 500;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface-2); }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.ok { background: var(--ok); border-color: var(--ok); color: #fff; }
+.btn.danger { color: var(--bad); }
+.btn.sm { padding: 4px 9px; font-size: 13px; }
+
+.pill {
+  display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  background: var(--surface-2); color: var(--muted); white-space: nowrap;
+}
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.accent { background: var(--accent-soft); color: var(--accent); }
+
+.muted { color: var(--muted); }
+.faint { color: var(--faint); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.input {
+  width: 100%; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 8px 10px;
+}
+.input:focus, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.empty { padding: 28px; text-align: center; color: var(--faint); }

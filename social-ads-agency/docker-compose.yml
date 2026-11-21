@@ -1,0 +1,32 @@
+services:
+  api:
+    build: .
+    env_file: .env
+    ports: ["8000:8000"]
+    volumes: ["./generated:/app/generated"]
+    depends_on: [postgres, redis]
+
+  # Kill-switch sweep every 15 minutes. Swap for an n8n Cron node or a Temporal schedule if you prefer.
+  killswitch:
+    build: .
+    env_file: .env
+    depends_on: [api]
+    entrypoint: ["sh", "-c", "while true; do python -m agency.workers.killswitch; sleep 900; done"]
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: agency
+      POSTGRES_PASSWORD: agency
+      POSTGRES_DB: agency
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
+    ports: ["5432:5432"]
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+volumes:
+  pgdata:
